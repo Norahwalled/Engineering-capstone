@@ -1,0 +1,198 @@
+services:
+  kafka:
+    image: apache/kafka:3.8.1
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9094
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    ports:
+      - "9094:9094"
+    volumes:
+      - kafka_data:/tmp/kraft-combined-logs
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+
+  postgres:
+    image: postgres:16.6-alpine
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: ${AIRFLOW_DATABASE_PASSWORD:?Set AIRFLOW_DATABASE_PASSWORD in .env}
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  opensearch:
+    image: opensearchproject/opensearch:2.17.1
+    environment:
+      discovery.type: single-node
+      DISABLE_SECURITY_PLUGIN: "true"
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 18
+
+  ollama:
+    image: ollama/ollama:0.12.6
+    environment:
+      OLLAMA_KEEP_ALIVE: 24h
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 18
+
+  ollama-init:
+    image: ollama/ollama:0.12.6
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    command: pull qwen2.5:0.5b
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+  marquez:
+    image: marquezproject/marquez:0.50.0
+    environment:
+      MARQUEZ_PORT: 5000
+      MARQUEZ_DB_HOST: postgres
+      MARQUEZ_DB_PORT: 5432
+      MARQUEZ_DB_USER: airflow
+      MARQUEZ_DB_PASSWORD: ${AIRFLOW_DATABASE_PASSWORD:?Set AIRFLOW_DATABASE_PASSWORD in .env}
+      MARQUEZ_DB: marquez
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+
+  airflow-init:
+    build: .
+    environment: &platform_environment
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_DATABASE_PASSWORD:?Set AIRFLOW_DATABASE_PASSWORD in .env}@postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY:?Set AIRFLOW_FERNET_KEY in .env}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      CAPSTONE_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      CAPSTONE_DELTA_BASE_PATH: file:///opt/capstone/data/lakehouse
+      CAPSTONE_OPENSEARCH_URL: http://opensearch:9200
+      CAPSTONE_OPENLINEAGE_URL: http://marquez:5000
+      CAPSTONE_LLM_BASE_URL: ${CAPSTONE_LLM_BASE_URL:-http://ollama:11434}
+      CAPSTONE_LLM_API_KEY: ${CAPSTONE_LLM_API_KEY:-}
+      CAPSTONE_LLM_MODEL: ${CAPSTONE_LLM_MODEL:-qwen2.5:0.5b}
+    command: >-
+      bash -c "airflow db migrate && airflow users create --username ${AIRFLOW_ADMIN_USERNAME:?Set AIRFLOW_ADMIN_USERNAME in .env} --firstname Data --lastname Engineer --role Admin --email ${AIRFLOW_ADMIN_EMAIL:?Set AIRFLOW_ADMIN_EMAIL in .env} --password ${AIRFLOW_ADMIN_PASSWORD:?Set AIRFLOW_ADMIN_PASSWORD in .env}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes: &platform_volumes
+      - ./airflow/dags:/opt/airflow/dags:ro
+      - ./src/capstone_de:/opt/capstone/capstone_de:ro
+      - lakehouse_data:/opt/capstone/data/lakehouse
+
+  kafka-init:
+    build: .
+    entrypoint: []
+    environment: *platform_environment
+    command: capstone ensure-topics
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  storage-init:
+    build: .
+    entrypoint: []
+    user: root
+    command: >-
+      bash -c "mkdir -p /opt/capstone/data/lakehouse && chown -R airflow:root /opt/capstone/data"
+    volumes: *platform_volumes
+
+  airflow-webserver:
+    build: .
+    environment: *platform_environment
+    command: webserver
+    ports:
+      - "8080:8080"
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+      storage-init:
+        condition: service_completed_successfully
+    volumes: *platform_volumes
+
+  airflow-scheduler:
+    build: .
+    environment: *platform_environment
+    command: scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+      storage-init:
+        condition: service_completed_successfully
+    volumes: *platform_volumes
+
+  validator:
+    build: .
+    entrypoint: []
+    environment: *platform_environment
+    command: capstone consume
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    volumes: *platform_volumes
+
+  rag-api:
+    build: .
+    entrypoint: []
+    environment: *platform_environment
+    command: capstone serve
+    ports:
+      - "8081:8080"
+    depends_on:
+      opensearch:
+        condition: service_healthy
+      ollama-init:
+        condition: service_completed_successfully
+      storage-init:
+        condition: service_completed_successfully
+    volumes: *platform_volumes
+
+volumes:
+  kafka_data:
+  postgres_data:
+  opensearch_data:
+  lakehouse_data:
+  ollama_data:
