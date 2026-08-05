@@ -1,0 +1,10 @@
+{
+  "event_id": "018fd263-0c9e-7c50-b902-d5dc7ac122fd",
+  "event_type": "support_case",
+  "customer_id": "customer-001",
+  "occurred_at": "2026-08-05T09:00:00+00:00",
+  "amount": "125.50",
+  "currency": "SAR",
+  "document_text": "Customer 001 reported that the August invoice is higher than the agreed service plan amount.",
+  "schema_version": "1.0"
+}

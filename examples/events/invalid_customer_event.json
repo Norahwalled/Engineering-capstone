@@ -1,0 +1,9 @@
+{
+  "event_id": "018fd263-0c9e-7c50-b902-d5dc7ac122fe",
+  "event_type": "support_case",
+  "customer_id": "customer-002",
+  "occurred_at": "2026-08-05T09:00:00",
+  "amount": "-5.00",
+  "currency": "saudi-riyal",
+  "schema_version": "1.0"
+}
