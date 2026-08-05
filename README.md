@@ -127,6 +127,11 @@ Completed under **SDAIA Academy — Modern Data Engineering for AI Systems**, 5-
 capstone cohort, 1–5 August 2026. Program resources:
 https://github.com/SDAIAAcademy
 
+## Team
+
+- Norah Waleed Alhaidar
+- Milan Wajdi Althumairi
+
 ## License
 
 Licensed under the Apache License 2.0. See [LICENSE](LICENSE).
