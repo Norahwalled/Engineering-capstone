@@ -22,6 +22,7 @@ logs/
 artifacts/
 data/
 checkpoints/
+work/
 great_expectations/uncommitted/
 
 .terraform/
