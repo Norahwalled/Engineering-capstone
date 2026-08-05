@@ -18,9 +18,11 @@ LOGGER = logging.getLogger(__name__)
 
 
 def aggregate_historical_events(history: DataFrame) -> DataFrame:
-    """Aggregate the complete deduplicated event history at customer-day grain."""
+    """Aggregate history at a currency-safe customer, event-day, and currency grain."""
     return history.groupBy(
-        "customer_id", date_trunc("day", "occurred_at").alias("event_day")
+        "customer_id",
+        date_trunc("day", "occurred_at").alias("event_day"),
+        "currency",
     ).agg(
         count("event_id").alias("event_count"),
         spark_sum("amount").alias("total_amount"),
@@ -29,7 +31,7 @@ def aggregate_historical_events(history: DataFrame) -> DataFrame:
 
 
 def build_gold_aggregates(settings: Settings, lineage: LineageEmitter) -> None:
-    """Create daily customer metrics from the complete historical Silver event table."""
+    """Create currency-safe daily metrics from the complete historical Silver table."""
     paths = LakehousePaths.from_settings(settings)
     run_id = lineage.new_run_id()
     lineage.emit(RunState.START, "gold_aggregate", run_id, [paths.silver], [paths.gold])

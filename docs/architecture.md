@@ -19,7 +19,7 @@ Kafka -> Pydantic validation -> Bronze Delta -> historical Silver MERGE
                 v                       v                 |       v
            quarantine topic      Great Expectations      |   current-state Silver
                                                         v
-                                                Gold daily aggregates
+                                          Gold customer-day-currency aggregates
                                                         |
                                                 OpenSearch indexing
                                                         |

@@ -8,6 +8,7 @@
 | Bronze/Silver/Gold Delta | `lakehouse/bronze.py`, `silver.py`, `gold.py` | Delta table reads and Airflow task logs |
 | Historical event MERGE | `lakehouse/silver.py` | Replayed `event_id` updates one row while distinct events remain |
 | Current-state Silver | `lakehouse/silver.py` | Latest event retained per `(customer_id, event_type)` without changing history |
+| Currency-safe Gold metrics | `lakehouse/gold.py` | Unique `(customer_id, event_day, currency)` rows and separated currency totals |
 | Schema enforcement | `lakehouse/schema_enforcement.py` | Rejected unauthorized-column write log |
 | RAG retrieval and citations | `rag/` | OpenSearch index, API response, and cited source chunks |
 | Airflow dependency gating | `airflow/dags/capstone_pipeline.py` | DAG graph and failed gate with downstream halt |

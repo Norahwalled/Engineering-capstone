@@ -11,3 +11,5 @@ validated business event. Replayed deliveries of the same event ID are resolved 
 ingestion time and Kafka provenance. The optional current-state Silver table is derived
 from that history and has one latest row per `(customer_id, event_type)`. Analytical
 Gold products must use historical Silver so current-state selection cannot erase facts.
+Monetary Gold metrics use the grain `(customer_id, event_day, currency)` so amounts in
+different currencies are never summed or averaged together.

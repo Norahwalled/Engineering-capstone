@@ -39,6 +39,7 @@ def _event(
     *,
     customer_id: str = "customer-001",
     event_type: str = "support_case",
+    currency: str = "SAR",
     ingested_minute: int = 0,
     kafka_offset: int = 0,
 ) -> dict[str, object]:
@@ -48,7 +49,7 @@ def _event(
         "customer_id": customer_id,
         "occurred_at": occurred_at,
         "amount": Decimal(amount),
-        "currency": "SAR",
+        "currency": currency,
         "document_text": f"Document for {event_id}",
         "schema_version": "1.0",
         "kafka_topic": "validated.events",
@@ -101,8 +102,10 @@ def test_current_state_selects_latest_event_without_removing_history(
     assert current[0].event_id == "event-2"
 
 
-def test_gold_aggregates_all_historical_events_by_customer_day(spark: SparkSession) -> None:
-    """Daily metrics include every unique event rather than only the current-state record."""
+def test_gold_aggregates_all_historical_events_by_customer_day_and_currency(
+    spark: SparkSession,
+) -> None:
+    """Daily metrics include every unique event at the currency-safe Gold grain."""
     history = transform_bronze_to_silver(
         spark.createDataFrame(
             [
@@ -115,7 +118,31 @@ def test_gold_aggregates_all_historical_events_by_customer_day(spark: SparkSessi
 
     rows = aggregate_historical_events(history).orderBy("event_day").collect()
 
-    assert [(row.event_count, row.total_amount) for row in rows] == [
-        (2, Decimal("30.00")),
-        (1, Decimal("30.00")),
+    assert [(row.currency, row.event_count, row.total_amount) for row in rows] == [
+        ("SAR", 2, Decimal("30.00")),
+        ("SAR", 1, Decimal("30.00")),
+    ]
+
+
+def test_gold_does_not_combine_different_currencies(spark: SparkSession) -> None:
+    """Amounts in different currencies produce separate rows for one customer and day."""
+    history = transform_bronze_to_silver(
+        spark.createDataFrame(
+            [
+                _event("event-sar", datetime(2026, 8, 4, 8, tzinfo=UTC), "100.00"),
+                _event(
+                    "event-usd",
+                    datetime(2026, 8, 4, 9, tzinfo=UTC),
+                    "25.00",
+                    currency="USD",
+                ),
+            ]
+        )
+    )
+
+    rows = aggregate_historical_events(history).orderBy("currency").collect()
+
+    assert [(row.currency, row.event_count, row.total_amount) for row in rows] == [
+        ("SAR", 1, Decimal("100.00")),
+        ("USD", 1, Decimal("25.00")),
     ]

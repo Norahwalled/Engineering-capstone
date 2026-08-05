@@ -17,12 +17,15 @@ Run the Airflow DAG. Inspect the shared `lakehouse_data` volume from an applicat
 container with a PySpark Delta read. Bronze must retain Kafka metadata. Historical
 Silver must contain one row per unique `event_id`; current-state Silver must contain one
 latest row per `(customer_id, event_type)`. Gold must contain daily `event_count`,
-`total_amount`, and `average_amount` calculated from historical Silver.
+`total_amount`, and `average_amount` calculated from historical Silver at the grain
+`(customer_id, event_day, currency)`.
 
 Publish two events with different event IDs but the same `(customer_id, event_type)` and
 rerun the DAG. Verify that historical Silver contains both events, current-state Silver
 contains only the newer event, and Gold counts both on their respective event days.
 Replay one event ID and verify that the historical Delta `MERGE` remains idempotent.
+Publish two events for the same customer and event day in different currencies and
+verify that Gold creates separate rows rather than combining their monetary amounts.
 
 ## 3. Schema enforcement and quality failure
 

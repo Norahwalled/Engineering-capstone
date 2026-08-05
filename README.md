@@ -22,6 +22,7 @@ Kafka raw.events
   -> Pydantic validation consumer
        -> validated.events -> Spark -> Bronze Delta -> GE gate -> Silver event history
        -> quarantine.events                                   -> GE gate -> Gold daily metrics
+                                                                        by currency
                                                                         -> GE gate -> chunk/embed
                                                                                       -> OpenSearch
                                                                -> Silver current-state snapshot

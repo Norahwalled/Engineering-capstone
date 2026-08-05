@@ -5,7 +5,7 @@
 `data/samples/` contains a deliberately small event set for local demonstrations and
 automated contract tests. It exercises Kafka ingestion, quarantine routing, Bronze
 delivery retention, historical Silver deduplication, the current-state Silver snapshot,
-Gold daily aggregation, and RAG indexing without requiring a large download.
+currency-safe Gold daily aggregation, and RAG indexing without requiring a large download.
 
 The files contain 18 records in total:
 
@@ -82,8 +82,9 @@ verification runbook. Expected behavior:
 4. Bronze retains all 14 valid deliveries, including 3 replayed IDs.
 5. Historical Silver contains 11 unique events after deterministic `event_id` deduplication.
 6. Current-state Silver contains the latest event per `(customer_id, event_type)`.
-7. Gold counts all 11 unique historical events by customer and event day, including the
-   three late-arriving facts on their original event dates.
+7. Gold counts all 11 unique historical events by customer, event day, and currency,
+   including the three late-arriving facts on their original event dates. Amounts in
+   different currencies are never combined.
 
 For exact service commands and evidence collection, continue with
 `docs/verification.md`. Reset Kafka offsets and Delta volumes between repeated full

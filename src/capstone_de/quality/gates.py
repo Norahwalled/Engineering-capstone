@@ -101,11 +101,23 @@ def validate_silver_current(frame: DataFrame) -> None:
 
 
 def validate_gold(frame: DataFrame) -> None:
-    """Enforce completeness and validity of Gold aggregate metrics."""
+    """Enforce the currency-safe Gold grain and aggregate validity."""
     dataset = _batch(frame)
     _require_success(
         dataset.validate(gx.expectations.ExpectColumnValuesToNotBeNull(column="customer_id")),
         "customer_id not null",
+    )
+    _require_success(
+        dataset.validate(gx.expectations.ExpectColumnValuesToNotBeNull(column="currency")),
+        "currency not null",
+    )
+    _require_success(
+        dataset.validate(
+            gx.expectations.ExpectCompoundColumnsToBeUnique(
+                column_list=["customer_id", "event_day", "currency"]
+            )
+        ),
+        "customer-day-currency grain unique",
     )
     _require_success(
         dataset.validate(
