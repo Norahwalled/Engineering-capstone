@@ -1,5 +1,9 @@
 # Live verification evidence — 2026-08-05
 
+> Historical record: this evidence predates the historical/current Silver refactor.
+> Re-run `docs/verification.md` before treating its Silver and Gold results as evidence
+> for the current implementation.
+
 This evidence was captured from the running Docker Compose platform. No mocked Kafka,
 Delta, OpenSearch, Airflow, Great Expectations, or OpenLineage service was used.
 

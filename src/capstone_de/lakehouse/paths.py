@@ -13,6 +13,7 @@ class LakehousePaths:
 
     bronze: str
     silver: str
+    silver_current: str
     gold: str
     checkpoints: str
 
@@ -23,6 +24,7 @@ class LakehousePaths:
         return cls(
             bronze=f"{root}/bronze/customer_events",
             silver=f"{root}/silver/customer_events",
+            silver_current=f"{root}/silver/customer_event_current",
             gold=f"{root}/gold/customer_daily_metrics",
             checkpoints=f"{root}/checkpoints",
         )

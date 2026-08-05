@@ -14,6 +14,7 @@ from capstone_de.airflow.tasks import (
     quality_gate,
     rag_indexing,
     schema_enforcement,
+    silver_current_snapshot,
     silver_merge,
 )
 
@@ -42,12 +43,20 @@ with DAG(
         python_callable=quality_gate,
         op_kwargs={"layer": "bronze"},
     )
-    silver = PythonOperator(task_id="silver_merge", python_callable=silver_merge)
+    silver = PythonOperator(task_id="silver_history_merge", python_callable=silver_merge)
     schema_check = PythonOperator(task_id="schema_enforcement", python_callable=schema_enforcement)
     silver_quality = PythonOperator(
-        task_id="silver_quality_gate",
+        task_id="silver_history_quality_gate",
         python_callable=quality_gate,
         op_kwargs={"layer": "silver"},
+    )
+    current = PythonOperator(
+        task_id="silver_current_snapshot", python_callable=silver_current_snapshot
+    )
+    current_quality = PythonOperator(
+        task_id="silver_current_quality_gate",
+        python_callable=quality_gate,
+        op_kwargs={"layer": "silver_current"},
     )
     gold = PythonOperator(task_id="gold_aggregate", python_callable=gold_aggregate)
     gold_quality = PythonOperator(
@@ -57,14 +66,6 @@ with DAG(
     )
     index = PythonOperator(task_id="rag_indexing", python_callable=rag_indexing)
 
-    (
-        topics
-        >> bronze
-        >> bronze_quality
-        >> silver
-        >> schema_check
-        >> silver_quality
-        >> gold
-        >> gold_quality
-        >> index
-    )
+    topics >> bronze >> bronze_quality >> silver >> schema_check >> silver_quality
+    silver_quality >> current >> current_quality
+    silver_quality >> gold >> gold_quality >> index

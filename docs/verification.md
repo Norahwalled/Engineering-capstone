@@ -14,23 +14,27 @@ Pydantic rejection JSON.
 ## 2. Bronze, Silver, and Gold Delta Lake
 
 Run the Airflow DAG. Inspect the shared `lakehouse_data` volume from an application
-container with a PySpark Delta read. Bronze must retain Kafka metadata; Silver must have
-the business key `(customer_id, event_type)`; Gold must contain daily `event_count`,
-`total_amount`, and `average_amount` aggregates.
+container with a PySpark Delta read. Bronze must retain Kafka metadata. Historical
+Silver must contain one row per unique `event_id`; current-state Silver must contain one
+latest row per `(customer_id, event_type)`. Gold must contain daily `event_count`,
+`total_amount`, and `average_amount` calculated from historical Silver.
 
-Publish a newer valid event with the same `(customer_id, event_type)` and rerun the DAG.
-Verify that Silver updates the existing business-keyed entity through Delta `MERGE`
-rather than duplicating it.
+Publish two events with different event IDs but the same `(customer_id, event_type)` and
+rerun the DAG. Verify that historical Silver contains both events, current-state Silver
+contains only the newer event, and Gold counts both on their respective event days.
+Replay one event ID and verify that the historical Delta `MERGE` remains idempotent.
 
 ## 3. Schema enforcement and quality failure
 
 The `schema_enforcement` Airflow task deliberately appends an unauthorized field to
 Silver. It succeeds only when Delta rejects the write. Retain its task log.
 
-For a quality-failure proof, insert a validly shaped duplicate business key directly
-into Bronze with a controlled Spark command, trigger the DAG, and retain the failed
-`silver_quality_gate` task result. The Gold and RAG indexing tasks must be upstream
-failed or not executed.
+Bronze deliberately permits replayed event IDs because it preserves source deliveries;
+historical Silver performs deterministic deduplication. For a quality-failure proof,
+insert a controlled duplicate `event_id` directly into historical Silver, run
+`silver_history_quality_gate`, and retain the failed result. Gold and RAG indexing must
+be upstream failed or not executed. Separately verify that the current-state gate
+rejects duplicate `(customer_id, event_type)` rows.
 
 ## 4. OpenLineage
 

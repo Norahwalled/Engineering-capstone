@@ -1,5 +1,8 @@
 # Final submission audit - 2026-08-05
 
+> Historical audit: the Silver/Gold model has since been refactored. Silver, Gold,
+> Airflow-task, quality-gate, and lineage claims require fresh live verification.
+
 This checklist evaluates every mandatory rubric statement. PASS requires local evidence.
 
 | Requirement | Status | Evidence file | How it was verified |

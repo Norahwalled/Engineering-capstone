@@ -1,0 +1,82 @@
+[
+  {
+    "event_id": "018fd263-0c9e-7c50-b902-d5dc7ac12001",
+    "event_type": "support_case",
+    "customer_id": "customer-001",
+    "occurred_at": "2026-08-01T08:15:00+00:00",
+    "amount": "125.50",
+    "currency": "SAR",
+    "document_text": "Customer 001 reported that the August invoice exceeded the agreed service plan amount.",
+    "schema_version": "1.0"
+  },
+  {
+    "event_id": "018fd263-0c9e-7c50-b902-d5dc7ac12002",
+    "event_type": "payment_received",
+    "customer_id": "customer-001",
+    "occurred_at": "2026-08-01T11:30:00+00:00",
+    "amount": "125.50",
+    "currency": "SAR",
+    "document_text": "Payment for the August service invoice was received in full.",
+    "schema_version": "1.0"
+  },
+  {
+    "event_id": "018fd263-0c9e-7c50-b902-d5dc7ac12003",
+    "event_type": "support_case",
+    "customer_id": "customer-002",
+    "occurred_at": "2026-08-02T09:00:00+03:00",
+    "amount": "80.00",
+    "currency": "SAR",
+    "document_text": "Customer 002 requested clarification about an installation charge.",
+    "schema_version": "1.0"
+  },
+  {
+    "event_id": "018fd263-0c9e-7c50-b902-d5dc7ac12004",
+    "event_type": "refund_issued",
+    "customer_id": "customer-002",
+    "occurred_at": "2026-08-02T14:20:00+03:00",
+    "amount": "20.00",
+    "currency": "SAR",
+    "document_text": "A partial refund was issued after reviewing the installation charge.",
+    "schema_version": "1.0"
+  },
+  {
+    "event_id": "018fd263-0c9e-7c50-b902-d5dc7ac12005",
+    "event_type": "subscription_renewed",
+    "customer_id": "customer-003",
+    "occurred_at": "2026-08-03T07:45:00+00:00",
+    "amount": "49.99",
+    "currency": "USD",
+    "document_text": "Customer 003 renewed the international analytics subscription.",
+    "schema_version": "1.0"
+  },
+  {
+    "event_id": "018fd263-0c9e-7c50-b902-d5dc7ac12006",
+    "event_type": "support_case",
+    "customer_id": "customer-003",
+    "occurred_at": "2026-08-03T16:10:00+00:00",
+    "amount": "0.00",
+    "currency": "USD",
+    "document_text": "Customer 003 asked how to export the monthly analytics report.",
+    "schema_version": "1.0"
+  },
+  {
+    "event_id": "018fd263-0c9e-7c50-b902-d5dc7ac12007",
+    "event_type": "payment_received",
+    "customer_id": "customer-004",
+    "occurred_at": "2026-08-04T10:05:00+02:00",
+    "amount": "75.25",
+    "currency": "EUR",
+    "document_text": "Customer 004 paid the monthly account balance.",
+    "schema_version": "1.0"
+  },
+  {
+    "event_id": "018fd263-0c9e-7c50-b902-d5dc7ac12008",
+    "event_type": "support_case",
+    "customer_id": "customer-001",
+    "occurred_at": "2026-08-05T12:00:00+00:00",
+    "amount": "15.00",
+    "currency": "SAR",
+    "document_text": "Customer 001 opened a new case about an optional add-on fee.",
+    "schema_version": "1.0"
+  }
+]

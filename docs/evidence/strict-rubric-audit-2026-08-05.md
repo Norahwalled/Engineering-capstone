@@ -1,5 +1,8 @@
 # Strict rubric audit — 2026-08-05
 
+> Historical audit: the Silver/Gold model has since been refactored. Its live pipeline
+> claims must be re-verified against the current revision.
+
 | Requirement | Implemented? | Evidence | Missing items | Risk level | Potential score impact |
 |---|---|---|---|---|---|
 | Kafka producer and consumer | Yes | Live Kafka topics and validator logs | None | Low | None |

@@ -1,0 +1,39 @@
+[
+  {
+    "event_id": "018fd263-0c9e-7c50-b902-d5dc7ac12101",
+    "event_type": "support_case",
+    "customer_id": "customer-005",
+    "occurred_at": "2026-08-05T09:00:00",
+    "amount": "-5.00",
+    "currency": "saudi-riyal",
+    "schema_version": "1.0"
+  },
+  {
+    "event_id": "not-a-uuid",
+    "event_type": "payment_received",
+    "customer_id": "customer-006",
+    "occurred_at": "2026-08-05T10:00:00+00:00",
+    "amount": "30.00",
+    "currency": "SAR",
+    "schema_version": "1.0"
+  },
+  {
+    "event_id": "018fd263-0c9e-7c50-b902-d5dc7ac12103",
+    "event_type": "x",
+    "customer_id": "",
+    "occurred_at": "2026-08-05T11:00:00+00:00",
+    "amount": "10.999",
+    "currency": "USD",
+    "schema_version": "1.0"
+  },
+  {
+    "event_id": "018fd263-0c9e-7c50-b902-d5dc7ac12104",
+    "event_type": "support_case",
+    "customer_id": "customer-007",
+    "occurred_at": "2026-08-05T12:00:00+00:00",
+    "amount": "10.00",
+    "currency": "SAR",
+    "schema_version": "2.0",
+    "unexpected_field": "must be rejected"
+  }
+]

@@ -6,7 +6,8 @@
 | Pydantic ingestion validation | `domain/events.py`, `ingestion/validator.py` | Valid event accepted; invalid event rejected |
 | Quarantine and reason | `application/contracts.py`, `ingestion/validator.py` | `quarantine.events` payload with rejection JSON |
 | Bronze/Silver/Gold Delta | `lakehouse/bronze.py`, `silver.py`, `gold.py` | Delta table reads and Airflow task logs |
-| Business-keyed MERGE | `lakehouse/silver.py` | Updated event changes existing `(customer_id, event_type)` row |
+| Historical event MERGE | `lakehouse/silver.py` | Replayed `event_id` updates one row while distinct events remain |
+| Current-state Silver | `lakehouse/silver.py` | Latest event retained per `(customer_id, event_type)` without changing history |
 | Schema enforcement | `lakehouse/schema_enforcement.py` | Rejected unauthorized-column write log |
 | RAG retrieval and citations | `rag/` | OpenSearch index, API response, and cited source chunks |
 | Airflow dependency gating | `airflow/dags/capstone_pipeline.py` | DAG graph and failed gate with downstream halt |

@@ -20,10 +20,12 @@ orchestrator, or in-memory vector index is used.
 ```text
 Kafka raw.events
   -> Pydantic validation consumer
-       -> validated.events -> Spark -> Bronze Delta -> GE gate -> Silver Delta MERGE
-       -> quarantine.events                               -> GE gate -> Gold Delta aggregate
-                                                                       -> GE gate -> chunk/embed
-                                                                                     -> OpenSearch
+       -> validated.events -> Spark -> Bronze Delta -> GE gate -> Silver event history
+       -> quarantine.events                                   -> GE gate -> Gold daily metrics
+                                                                        -> GE gate -> chunk/embed
+                                                                                      -> OpenSearch
+                                                               -> Silver current-state snapshot
+                                                                  -> GE gate
 
 Question -> dense vector search + BM25 -> Reciprocal Rank Fusion -> cross-encoder
          -> grounded LLM answer + source/chunk citations
@@ -36,7 +38,7 @@ Airflow coordinates bounded jobs; OpenLineage emits START, COMPLETE, and FAIL fo
 ```text
 src/capstone_de/domain/          Pydantic business contracts
 src/capstone_de/ingestion/       Kafka producer, consumer, and quarantine routing
-src/capstone_de/lakehouse/       PySpark/Delta Bronze, Silver, Gold, MERGE, schema proof
+src/capstone_de/lakehouse/       Bronze, historical/current Silver, Gold, schema proof
 src/capstone_de/quality/         Great Expectations quality gates
 src/capstone_de/lineage/         OpenLineage lifecycle emitter
 src/capstone_de/rag/             Chunking, embeddings, OpenSearch, hybrid RAG API

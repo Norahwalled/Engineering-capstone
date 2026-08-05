@@ -20,7 +20,10 @@ htmlcov/
 *.log
 logs/
 artifacts/
-data/
+data/*
+!data/README.md
+!data/samples/
+!data/samples/*.json
 checkpoints/
 work/
 great_expectations/uncommitted/

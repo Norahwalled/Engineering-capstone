@@ -1,0 +1,32 @@
+[
+  {
+    "event_id": "018fd263-0c9e-7c50-b902-d5dc7ac12201",
+    "event_type": "support_case",
+    "customer_id": "customer-002",
+    "occurred_at": "2026-07-29T13:00:00+03:00",
+    "amount": "35.00",
+    "currency": "SAR",
+    "document_text": "Late-arriving case from July concerning an activation charge.",
+    "schema_version": "1.0"
+  },
+  {
+    "event_id": "018fd263-0c9e-7c50-b902-d5dc7ac12202",
+    "event_type": "payment_received",
+    "customer_id": "customer-003",
+    "occurred_at": "2026-07-31T18:30:00+00:00",
+    "amount": "49.99",
+    "currency": "USD",
+    "document_text": "Late-arriving payment event received after the August batch began.",
+    "schema_version": "1.0"
+  },
+  {
+    "event_id": "018fd263-0c9e-7c50-b902-d5dc7ac12203",
+    "event_type": "refund_issued",
+    "customer_id": "customer-004",
+    "occurred_at": "2026-08-01T08:00:00+02:00",
+    "amount": "5.25",
+    "currency": "EUR",
+    "document_text": "Late-arriving refund associated with a prior billing adjustment.",
+    "schema_version": "1.0"
+  }
+]

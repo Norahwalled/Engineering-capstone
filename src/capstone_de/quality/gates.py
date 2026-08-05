@@ -48,7 +48,7 @@ def _batch(frame: DataFrame) -> SparkExpectationBatch:
 
 
 def validate_bronze(frame: DataFrame) -> None:
-    """Enforce Bronze record identity and Kafka provenance requirements."""
+    """Enforce Bronze identity presence and provenance while allowing delivery replays."""
     dataset = _batch(frame)
     _require_success(
         dataset.validate(gx.expectations.ExpectColumnValuesToNotBeNull(column="event_id")),
@@ -58,15 +58,19 @@ def validate_bronze(frame: DataFrame) -> None:
         dataset.validate(gx.expectations.ExpectColumnValuesToNotBeNull(column="kafka_offset")),
         "kafka_offset not null",
     )
+
+
+def validate_silver(frame: DataFrame) -> None:
+    """Enforce historical event identity and monetary constraints before Gold."""
+    dataset = _batch(frame)
+    _require_success(
+        dataset.validate(gx.expectations.ExpectColumnValuesToNotBeNull(column="event_id")),
+        "event_id not null",
+    )
     _require_success(
         dataset.validate(gx.expectations.ExpectColumnValuesToBeUnique(column="event_id")),
         "event_id unique",
     )
-
-
-def validate_silver(frame: DataFrame) -> None:
-    """Enforce business-key and monetary-data constraints before Gold aggregation."""
-    dataset = _batch(frame)
     _require_success(
         dataset.validate(gx.expectations.ExpectColumnValuesToNotBeNull(column="customer_id")),
         "customer_id not null",
@@ -77,13 +81,22 @@ def validate_silver(frame: DataFrame) -> None:
         ),
         "amount non-negative",
     )
+
+
+def validate_silver_current(frame: DataFrame) -> None:
+    """Enforce the one-row-per-customer-and-event-type current-state grain."""
+    dataset = _batch(frame)
+    _require_success(
+        dataset.validate(gx.expectations.ExpectColumnValuesToNotBeNull(column="event_id")),
+        "event_id not null",
+    )
     _require_success(
         dataset.validate(
             gx.expectations.ExpectCompoundColumnsToBeUnique(
                 column_list=["customer_id", "event_type"]
             )
         ),
-        "business key unique",
+        "current-state business key unique",
     )
 
 
@@ -111,10 +124,16 @@ def validate_gold(frame: DataFrame) -> None:
 def run_quality_gate(layer: str, settings: Settings, lineage: LineageEmitter) -> None:
     """Validate a persisted Delta layer and raise on failure to gate the Airflow DAG."""
     paths = LakehousePaths.from_settings(settings)
-    path_by_layer = {"bronze": paths.bronze, "silver": paths.silver, "gold": paths.gold}
+    path_by_layer = {
+        "bronze": paths.bronze,
+        "silver": paths.silver,
+        "silver_current": paths.silver_current,
+        "gold": paths.gold,
+    }
     validator_by_layer = {
         "bronze": validate_bronze,
         "silver": validate_silver,
+        "silver_current": validate_silver_current,
         "gold": validate_gold,
     }
     if layer not in path_by_layer:

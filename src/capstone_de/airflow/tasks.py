@@ -8,7 +8,7 @@ from capstone_de.infrastructure.kafka import KafkaClient
 from capstone_de.lakehouse.bronze import start_bronze_stream
 from capstone_de.lakehouse.gold import build_gold_aggregates
 from capstone_de.lakehouse.schema_enforcement import verify_schema_enforcement
-from capstone_de.lakehouse.silver import merge_silver
+from capstone_de.lakehouse.silver import build_silver_current, merge_silver
 from capstone_de.lineage.emitter import LineageEmitter
 from capstone_de.quality.gates import run_quality_gate
 from capstone_de.rag.indexer import index_silver_documents
@@ -47,9 +47,15 @@ def quality_gate(layer: str) -> None:
 
 
 def silver_merge() -> None:
-    """Execute business-keyed Silver Delta upsert."""
+    """Merge the complete event history into Silver by immutable event ID."""
     settings = get_settings()
     merge_silver(settings, LineageEmitter(settings))
+
+
+def silver_current_snapshot() -> None:
+    """Derive the optional latest-state Silver table from historical Silver."""
+    settings = get_settings()
+    build_silver_current(settings, LineageEmitter(settings))
 
 
 def schema_enforcement() -> None:

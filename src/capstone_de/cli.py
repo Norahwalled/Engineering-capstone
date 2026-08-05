@@ -29,13 +29,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     producer_parser.add_argument("event_file", type=Path)
     subparsers.add_parser("bronze", help="Run bounded Kafka-to-Bronze streaming.")
-    subparsers.add_parser("silver", help="Run business-keyed Silver Delta MERGE.")
+    subparsers.add_parser("silver", help="Merge deduplicated event history into Silver.")
+    subparsers.add_parser("silver-current", help="Build the latest-state Silver snapshot.")
     subparsers.add_parser("schema-enforcement", help="Verify Delta rejects incompatible writes.")
     subparsers.add_parser("gold", help="Build Gold aggregates.")
     quality_parser = subparsers.add_parser(
         "quality", help="Run a blocking Great Expectations gate."
     )
-    quality_parser.add_argument("layer", choices=("bronze", "silver", "gold"))
+    quality_parser.add_argument(
+        "layer", choices=("bronze", "silver", "silver_current", "gold")
+    )
     subparsers.add_parser("index", help="Chunk, embed, and index Silver documents.")
     serve_parser = subparsers.add_parser("serve", help="Run the cited RAG API.")
     serve_parser.add_argument("--host", default="0.0.0.0")
@@ -67,6 +70,7 @@ def _component_actions(
         quality_gate,
         rag_indexing,
         schema_enforcement,
+        silver_current_snapshot,
         silver_merge,
     )
     from capstone_de.infrastructure.kafka import KafkaClient
@@ -84,6 +88,7 @@ def _component_actions(
         "produce": lambda: _produce(args.event_file, settings),
         "bronze": bronze_ingestion,
         "silver": silver_merge,
+        "silver-current": silver_current_snapshot,
         "schema-enforcement": schema_enforcement,
         "gold": gold_aggregate,
         "quality": lambda: quality_gate(args.layer),
